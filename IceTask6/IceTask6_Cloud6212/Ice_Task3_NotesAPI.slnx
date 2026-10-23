@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="../../../Downloads/UnifiedNotesGateway/UnifiedNotesGateway.csproj" />
+  <Project Path="Ice_Task3_NotesAPI.csproj" />
+</Solution>
