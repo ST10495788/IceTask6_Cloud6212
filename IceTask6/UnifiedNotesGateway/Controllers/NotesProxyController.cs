@@ -19,31 +19,43 @@ public class NotesProxyController : ControllerBase
     [HttpGet]
     public Task<IActionResult> GetAllNotes() => ForwardAsync(HttpMethod.Get, "api/notes");
 
+    [HttpPost]
+    [Consumes("application/json")]
+    public Task<IActionResult> CreateNote([FromBody] CreateNoteRequest note)
+    {
+        var json = System.Text.Json.JsonSerializer.Serialize(note);
 
-    [HttpPut("{noteId}")  ,  Consumes("application/json")]
-    public Task<IActionResult> UpdateNote( string noteId, [FromBody] UpdateNoteRequest note) =>
-    ForwardAsync(HttpMethod.Put, $"api/notes/{Uri.EscapeDataString(noteId)}");
+        return ForwardAsync(
+            HttpMethod.Post,
+            "api/notes",
+            json);
+    }
+
+    [HttpPut("{noteId}"), Consumes("application/json")]
+    public Task<IActionResult> UpdateNote(
+    string noteId,
+    [FromBody] UpdateNoteRequest note)
+    {
+        var json = System.Text.Json.JsonSerializer.Serialize(note);
+
+        return ForwardAsync( HttpMethod.Put, $"api/notes/{Uri.EscapeDataString(noteId)}", json);
+    }
 
     [HttpGet("{noteId}")]
     public Task<IActionResult> GetNoteById(string noteId) => ForwardAsync(HttpMethod.Get, $"api/notes/{Uri.EscapeDataString(noteId)}");
-
-    [HttpPut("{noteId}") , Consumes("application/json")]
-    public Task<IActionResult> UpdateNote(string noteId) => ForwardAsync(HttpMethod.Put, $"api/notes/{Uri.EscapeDataString(noteId)}");
 
     [HttpDelete("{noteId}")]
     public Task<IActionResult> DeleteNote(string noteId) => ForwardAsync(HttpMethod.Delete, $"api/notes/{Uri.EscapeDataString(noteId)}");
 
     [HttpPost("{noteId}/attachments")]
     [Consumes("multipart/form-data")]
-    public Task<IActionResult> AddAttachment( string noteId,
-        [FromForm] AttachmentUploadRequest upload) =>
-        ForwardAsync( HttpMethod.Post, $"api/notes/{Uri.EscapeDataString(noteId)}/attachments");
+    public Task<IActionResult> AddAttachment( string noteId, [FromForm] AttachmentUploadRequest upload) => ForwardAsync( HttpMethod.Post, $"api/notes/{Uri.EscapeDataString(noteId)}/attachments");
 
     [HttpDelete("{noteId}/attachments/{attachmentId}")]
     public Task<IActionResult> DeleteAttachment(string noteId, string attachmentId) =>
         ForwardAsync( HttpMethod.Delete, $"api/notes/{Uri.EscapeDataString(noteId)}/attachments/" + $"{Uri.EscapeDataString(attachmentId)}");
 
-    private async Task<IActionResult> ForwardAsync(HttpMethod method, string path)
+    private async Task<IActionResult> ForwardAsync(HttpMethod method, string path, string? jsonBody = null)
     {
         var targetUri = new Uri(_httpClient.BaseAddress!, path + Request.QueryString);
 
@@ -54,13 +66,17 @@ public class NotesProxyController : ControllerBase
             outgoing.Headers.TryAddWithoutValidation("Authorization", Request.Headers.Authorization.ToString());
         }
 
-        if (Request.ContentLength > 0 || Request.Headers.ContainsKey("Transfer-Encoding"))
+        if (jsonBody is not null)
+        {
+            outgoing.Content = new StringContent(jsonBody, System.Text.Encoding.UTF8, "application/json");
+        }
+        else if (Request.ContentLength > 0 || Request.Headers.ContainsKey("Transfer-Encoding"))
         {
             outgoing.Content = new StreamContent(Request.Body);
 
             if (!string.IsNullOrWhiteSpace(Request.ContentType))
             {
-                outgoing.Content.Headers.TryAddWithoutValidation( "Content-Type", Request.ContentType);
+                outgoing.Content.Headers.TryAddWithoutValidation("Content-Type", Request.ContentType);
             }
         }
 

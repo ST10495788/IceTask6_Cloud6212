@@ -15,7 +15,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("UnifiedNotesGateway")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+22647640e64f588193e9a4b060df849436bf2312")]
 [assembly: System.Reflection.AssemblyProductAttribute("UnifiedNotesGateway")]
 [assembly: System.Reflection.AssemblyTitleAttribute("UnifiedNotesGateway")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

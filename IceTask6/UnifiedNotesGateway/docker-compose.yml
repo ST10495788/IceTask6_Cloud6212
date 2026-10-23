@@ -1,9 +1,7 @@
-
 services:
   azurite:
     image: mcr.microsoft.com/azure-storage/azurite
-    container_name: notes-azurite
-    command: azurite --blobHost 0.0.0.0 --queueHost 0.0.0.0 --tableHost 0.0.0.0
+    command: azurite --blobHost 0.0.0.0 --queueHost 0.0.0.0 --tableHost 0.0.0.0 --location /data
     ports:
       - "10000:10000"
       - "10002:10002"
@@ -12,14 +10,14 @@ services:
 
   notes-api:
     build:
-      context: .
+      context: ../IceTask6_Cloud6212
       dockerfile: Dockerfile
-    container_name: notes-api
     environment:
-      AzureWebJobsStorage: "UseDevelopmentStorage=true"
-      AzureBlobStorage: "UseDevelopmentStorage=true"
+      AzureWebJobsStorage: "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://azurite:10000/devstoreaccount1;QueueEndpoint=http://azurite:10001/devstoreaccount1;TableEndpoint=http://azurite:10002/devstoreaccount1;"
+      AzureBlobStorage: "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://azurite:10000/devstoreaccount1;"
+
       FUNCTIONS_WORKER_RUNTIME: "dotnet-isolated"
-      Jwt__Secret: "${JWT_SECRET:?Set JWT_SECRET in your environment}"
+      Jwt__Secret: "${JWT_SECRET:?Set JWT_SECRET before starting Compose}"
       Jwt__Issuer: "UnifiedNotesAPI"
       Jwt__Audience: "UnifiedNotesAPI"
     depends_on:
@@ -29,16 +27,15 @@ services:
 
   api-gateway:
     build:
-      context: ./UnifiedNotesGateway
+      context: .
       dockerfile: Dockerfile
-    container_name: unified-notes-gateway
     environment:
       ASPNETCORE_HTTP_PORTS: "8080"
-      Jwt__Secret: "${JWT_SECRET:?Set JWT_SECRET in your environment}"
+      ASPNETCORE_ENVIRONMENT: "Development"
+      Jwt__Secret: "${JWT_SECRET:?Set JWT_SECRET before starting Compose}"
       Jwt__Issuer: "UnifiedNotesAPI"
       Jwt__Audience: "UnifiedNotesAPI"
       NotesApi__BaseUrl: "http://notes-api:80/"
-      ASPNETCORE_ENVIRONMENT: "Development"
     depends_on:
       - notes-api
     ports:
